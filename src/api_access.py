@@ -16,27 +16,26 @@ class MetroApi:
         self._api_base = "https://api.wmata.com"
         self._wmata_base = "https://wmata.com"
 
-    def fetch_train_predictions(self, requests, station_cfg: dict):
+    def fetch_train_predictions(self, requests, station_code: str):
         path = '/StationPrediction.svc/json/GetPrediction/'
-        url = f"{self._api_base}{path}{station_cfg['station_code']}"
+        url = f"{self._api_base}{path}{station_code}"
         headers = {'api_key': self._api_key}
         retries = config.get('metro_api_retries', 3)
 
         for attempt in range(retries):
             try:
-                # Use timeout to prevent hanging the Matrix refresh
                 with requests.get(url, headers=headers, timeout=10) as response:
                     if response.status_code in (401, 403):
                         print(f"Auth Error: {response.status_code}")
                         return None
-                    
+
                     if response.status_code != 200:
                         time.sleep(1)
                         continue
-                    
+
                     data = response.json()
-                    gc.collect() # Clean up before processing
-                    return self._process_train_data(data, station_cfg)
+                    gc.collect()
+                    return self._process_train_data(data)
             except Exception as e:
                 print(f"Conn Error: {e}")
                 if attempt < retries - 1: time.sleep(2)
@@ -158,47 +157,23 @@ class MetroApi:
         gc.collect()
         return routes
 
-    def _process_train_data(self, json_data, station_cfg):
-        target_lines = station_cfg.get('lines', [])
-        target_groups = [str(g) for g in station_cfg.get('groups', [])]
-        transit_time = int(station_cfg.get('transit_time', 0))
-        
+    def _process_train_data(self, json_data):
         trains = json_data.get('Trains', [])
         if not trains: return []
 
-        # List comprehension for efficiency
         processed_list = []
         for t in trains:
-            line = t.get('Line')
-            group = str(t.get('Group'))
-            
-            if (not target_lines or line in target_lines) and (not target_groups or group in target_groups):
-                m_raw = t.get('Min', '--')
-                
-                # Numeric value for sorting and pruning
-                if m_raw in ("ARR", "BRD"): val = 0
-                elif m_raw.isdigit(): val = int(m_raw)
-                else: val = -1 # Delayed/Unknown
-                
-                processed_list.append({
-                    'n_min': val,
-                    'normalized': self._normalize_train_response(t)
-                })
+            m_raw = t.get('Min', '--')
+            if m_raw in ("ARR", "BRD"): val = 0
+            elif m_raw.isdigit(): val = int(m_raw)
+            else: val = -1
+            processed_list.append({
+                'n_min': val,
+                'normalized': self._normalize_train_response(t)
+            })
 
-        # Sort: Valid times first, then delays (-1)
         processed_list.sort(key=lambda x: (x['n_min'] == -1, x['n_min']))
-
-        # Pruning (Keep the board legible)
-        limit = 4 if not station_cfg.get('train_header', True) else 3
-        while len(processed_list) > limit:
-            first_mins = processed_list[0]['n_min']
-            # If the soonest train is uncatchable, pop it
-            if -1 < first_mins < transit_time:
-                processed_list.pop(0)
-            else:
-                break
-
-        return [item['normalized'] for item in processed_list[:limit]]
+        return processed_list
 
     def _normalize_train_response(self, t):
         line = t.get('Line', '--')

@@ -269,11 +269,40 @@ while True:
             while train_cursor < len(train_screens) and not pending_items:
                 stat = train_screens[train_cursor]
                 train_cursor += 1
-                if stat.get('station_code', ''):
+                station_code = stat.get('station_code', '')
+                if station_code:
+                    if (now - last_fetch_time_trains.get(station_code, -100)) >= intermission:
+                        try:
+                            raw = api.fetch_train_predictions(requests, station_code)
+                            train_predictions_cache[station_code] = raw or []
+                            last_fetch_time_trains[station_code] = now
+                            print(f"[{time.monotonic() - start_secs:.1f}s] Fresh Fetch: {station_code}")
+                        except Exception as e:
+                            print(f"[{time.monotonic() - start_secs:.1f}s] [API] Fail: {e}")
+                            if station_code not in train_predictions_cache:
+                                train_predictions_cache[station_code] = []
+
+                    raw = train_predictions_cache.get(station_code, [])
+                    target_lines = stat.get('lines', [])
+                    target_groups = [str(g) for g in stat.get('groups', [])]
+                    transit_time = int(stat.get('transit_time', 0))
+                    limit = 4 if not stat.get('train_header', True) else 3
+
+                    filtered = [
+                        item for item in raw
+                        if (not target_lines or item['normalized']['line_abbrev'] in target_lines)
+                        and (not target_groups or str(item['normalized']['group']) in target_groups)
+                    ]
+                    while len(filtered) > limit:
+                        if -1 < filtered[0]['n_min'] < transit_time:
+                            filtered.pop(0)
+                        else:
+                            break
+
                     pending_items.append({
                         'type': 'train',
-                        'station_code': stat.get('station_code', 'A01'),
-                        'config_details': stat
+                        'config_details': stat,
+                        'train_data': [item['normalized'] for item in filtered[:limit]]
                     })
             if train_cursor >= len(train_screens) and not pending_items:
                 train_cursor = 0
@@ -498,11 +527,27 @@ while True:
             # If neither phase queued anything, start the next train cycle immediately
             if not pending_items and train_screens:
                 for i, stat in enumerate(train_screens):
-                    if stat.get('station_code', ''):
+                    station_code = stat.get('station_code', '')
+                    if station_code:
+                        raw = train_predictions_cache.get(station_code, [])
+                        target_lines = stat.get('lines', [])
+                        target_groups = [str(g) for g in stat.get('groups', [])]
+                        transit_time = int(stat.get('transit_time', 0))
+                        limit = 4 if not stat.get('train_header', True) else 3
+                        filtered = [
+                            item for item in raw
+                            if (not target_lines or item['normalized']['line_abbrev'] in target_lines)
+                            and (not target_groups or str(item['normalized']['group']) in target_groups)
+                        ]
+                        while len(filtered) > limit:
+                            if -1 < filtered[0]['n_min'] < transit_time:
+                                filtered.pop(0)
+                            else:
+                                break
                         pending_items.append({
                             'type': 'train',
-                            'station_code': stat.get('station_code', 'A01'),
-                            'config_details': stat
+                            'config_details': stat,
+                            'train_data': [item['normalized'] for item in filtered[:limit]]
                         })
                         train_cursor = i + 1
                         break
@@ -525,26 +570,7 @@ while True:
             buses_subgroup.hidden = True
 
             target_cfg = active_item.get('config_details')
-            s_code = active_item.get('station_code')
-            lines = "".join(target_cfg.get('lines', []))
-            group_name = "".join([str(g) for g in target_cfg.get('groups', [])])
-            cache_key = f"{s_code}_{lines}_{group_name}"
-            
-            age = now - last_fetch_time_trains.get(cache_key, -100)
-
-            if age >= intermission:
-                try:
-                    train_predictions = api.fetch_train_predictions(requests, target_cfg) or []
-                    train_predictions_cache[cache_key] = train_predictions
-                    last_fetch_time_trains[cache_key] = now
-                    print(f"[{time.monotonic() - start_secs:.1f}s] Fresh Fetch: {cache_key}")
-                except Exception as e:
-                    print(f"[{time.monotonic() - start_secs:.1f}s] [API] Fail: {e}")
-                    if cache_key not in train_predictions_cache:
-                        train_predictions_cache[cache_key] = []
-                
-            train_data = train_predictions_cache.get(cache_key, [])
-            train_board.refresh(target_cfg, train_data)
+            train_board.refresh(target_cfg, active_item.get('train_data', []))
             log_screen(start_secs, is_rotating, target_cfg)
 
         elif active_item['type'] == 'bus':

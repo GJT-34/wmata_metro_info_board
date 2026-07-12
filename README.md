@@ -53,4 +53,4 @@ I've found this Metro information board to be a unusual but useful piece of kit 
 - [Setting up the hardware](https://github.com/GJT-34/wmata_metro_train_board/blob/main/HARDWARE.md)
 - [Installing the software](https://github.com/GJT-34/wmata_metro_train_board/blob/main/SOFTWARE.md)
 - [Editing the configuration file](https://github.com/GJT-34/wmata_metro_train_board/blob/main/CONFIGURE.md)
-- [Using the train board](https://github.com/GJT-34/wmata_metro_train_board/blob/main/USAGE.md)
+- [Using the train board and troubleshooting](https://github.com/GJT-34/wmata_metro_train_board/blob/main/USAGE.md)

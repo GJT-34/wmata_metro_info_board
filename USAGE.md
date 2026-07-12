@@ -1,4 +1,4 @@
-# Using the Info Board
+# Using the Info Board and Troubleshooting
 
 Once it's configured, using the info board is mostly a matter of turning it on and letting it run. However, there are some tips that can help you optimize your use of the board.
 
@@ -31,6 +31,8 @@ The UP and DOWN buttons recognize long presses (i.e., presses of over half a sec
 
 I've seen some variations of the [original train board](https://github.com/metro-sign/dc-metro) that provide configuration options to stop the board from calling for API data at certain times, particularly while the Metrorail system is closed. There are no such options in this version. Instead, if that's an issue for you I suggest you get a smart plug. Smart plugs are inexpensive and offer a lot of configurable options, and it only takes a few seconds for the board to boot from a cold start.
 
-## Additional Help
+## Troubleshooting and Additional Help
 
 Adafruit has a lot of [documentation](https://circuitpython.org/board/adafruit_matrixportal_s3/) on CircuitPython running on the Matrix Portal S3, including information that can be helpful for troubleshooting. It's a good place to start if you run into issues.
+
+One thing that can help with diagnosing issues is setting up serial console access to the board. This will display information on a serial console program that can be used to help understand what problems the board is having, if any. Adafruit provides instructions on serial console access [here](https://learn.adafruit.com/welcome-to-circuitpython/kattni-connecting-to-the-serial-console). Some of the information is about a program called Mu that is no longer maintained, but the page also notes other ways to get serial access on Windows, Mac, and Linux.

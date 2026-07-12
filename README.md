@@ -24,7 +24,7 @@ In 2023, I became one of several people who set up code forks on github of the o
 ![font1_circles](img/font1_circles.jpg)
 ![font2_circles](img/font2_circles.jpg)
 
-Since then, I've added several features to the code and have expanded it to provide information on Metrobus, leading to a change in hardware requirements for the project. The project that was released in 2020 called for the use of the Matrix Portal M4 to control the LED panel. Because the additional features use more memory than the original version, my version of the code is designed to run on the newer Matrix Portal S3. The S3 has far more memory than the M4, which is no longer for sale.
+In 2026, I added several features to the code and expanded it to provide information on Metrobus, leading to a change in hardware requirements for the project. The project that was released in 2020 called for the use of the Matrix Portal M4 to control the LED panel. Because the additional features use more memory than the original version, my version of the code is designed to run on the newer Matrix Portal S3. The S3 has far more memory than the M4, which is no longer for sale.
 
 I've found this Metro information board to be a unusual but useful piece of kit to have, and maybe you will too.
 

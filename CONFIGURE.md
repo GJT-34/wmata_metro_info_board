@@ -114,7 +114,7 @@ Colors are defined in Hex format (`0xRRGGBB`).
 | 'show_lines_in_their_colors': True | 'show_lines_in_their_colors': False |
 | --- | --- |
 | ![ln1](img/ln1.webp) | ![ln0](img/ln0.webp) |
-| ![ln1](img/ln1.webp) | ![fc2](img/fc2.webp) |
+| ![ln1a](img/ln1a.jpg) | ![fc2](img/fc2.webp) |
 
 ### Arrow Directional Layout
 
